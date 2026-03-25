@@ -217,6 +217,26 @@ export function ReviewView() {
           <p className="text-on-surface-variant text-sm">Gerado via Prompt: "{draft.prompt.substring(0, 20)}..."</p>
         </div>
       </section>
+
+      {/* Debug Info Panel */}
+      {draft._debug && (
+        <section className="mt-8 p-6 bg-error/10 border border-error/30 rounded-2xl">
+          <h3 className="text-error font-bold mb-4 flex items-center gap-2">
+            <XCircle size={20} />
+            Informações de Diagnóstico do Webhook (n8n)
+          </h3>
+          <div className="space-y-2 text-sm font-mono text-on-surface-variant break-all">
+            <p><strong className="text-on-surface">URL:</strong> {draft._debug.webhookUrl}</p>
+            <p><strong className="text-on-surface">Status HTTP:</strong> {draft._debug.webhookStatus}</p>
+            {draft._debug.webhookError && (
+              <p><strong className="text-error">Erro:</strong> {draft._debug.webhookError}</p>
+            )}
+            {draft._debug.webhookResponseText && (
+              <p><strong className="text-on-surface">Resposta do Servidor:</strong> {draft._debug.webhookResponseText}</p>
+            )}
+          </div>
+        </section>
+      )}
     </motion.div>
   );
 }

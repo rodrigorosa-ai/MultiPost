@@ -20,6 +20,18 @@ export function GenerateView() {
     setIsGenerating(true);
     try {
       const newDraft = await api.generateDraft(formData);
+      
+      // Check for debug info
+      if (newDraft._debug) {
+        if (newDraft._debug.webhookError) {
+          alert(`Aviso: O webhook falhou.\nStatus: ${newDraft._debug.webhookStatus}\nErro: ${newDraft._debug.webhookError}`);
+        } else if (newDraft._debug.webhookStatus === '200') {
+          // It worked, but let's show what it returned so the user knows it hit the server
+          console.log("Webhook success:", newDraft._debug);
+          alert(`Webhook chamado com sucesso!\nStatus: ${newDraft._debug.webhookStatus}\nResposta: ${newDraft._debug.webhookResponseText}`);
+        }
+      }
+      
       setDrafts(prev => [newDraft, ...prev]);
       setActiveDraftId(newDraft.id);
       setCurrentView('review');

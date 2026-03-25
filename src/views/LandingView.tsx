@@ -2,6 +2,7 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 import { ArrowRight, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Logo } from '../components/Logo';
 
 export function LandingView() {
   const { setCurrentView } = useApp();
@@ -10,7 +11,7 @@ export function LandingView() {
     <div className="relative min-h-screen w-full overflow-hidden bg-[#070612] flex flex-col">
       {/* Top Bar for Landing */}
       <header className="absolute top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-6 py-6">
-        <span className="font-headline italic font-bold text-2xl text-primary tracking-tight">MultiPost</span>
+        <Logo className="h-14 w-auto text-primary" />
         <button 
           onClick={() => setCurrentView('dashboard')}
           className="text-sm font-label uppercase tracking-widest text-on-surface hover:text-primary transition-colors"

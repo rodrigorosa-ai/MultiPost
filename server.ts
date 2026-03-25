@@ -19,23 +19,87 @@ async function startServer() {
   app.post("/api/drafts/generate", async (req, res) => {
     try {
       const payload = req.body;
-      const webhookUrl = process.env.N8N_WEBHOOK_URL;
+      let webhookUrl = process.env.N8N_WEBHOOK_URL;
+      
+      // Auto-fix test URLs to production URLs to prevent 404s if the secret is stuck
+      if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
+        webhookUrl = webhookUrl.replace('/webhook-test/', '/webhook/');
+      }
       
       console.log('Backend processing draft generation. Webhook:', webhookUrl, payload);
       
-      // Simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      let caption = `Legenda gerada para: ${payload.prompt}\n\n#Automação #IA #MultiPost`;
+      let imageUrl = 'https://picsum.photos/seed/generated/800/1000';
+      let webhookStatus = 'not_called';
+      let webhookError = null;
+      let webhookResponseText = '';
+
+      if (webhookUrl) {
+        try {
+          console.log(`Calling n8n webhook at ${webhookUrl}...`);
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'generate',
+              data: payload
+            })
+          });
+          
+          webhookStatus = response.status.toString();
+          webhookResponseText = await response.text();
+          
+          if (response.ok) {
+            try {
+              const result = JSON.parse(webhookResponseText);
+              console.log('n8n webhook response:', result);
+              
+              // Handle n8n's default response format or custom format
+              if (result.caption) {
+                caption = result.caption;
+              } else if (result.data && result.data.caption) {
+                caption = result.data.caption;
+              }
+              
+              if (result.imageUrl) {
+                imageUrl = result.imageUrl;
+              } else if (result.data && result.data.imageUrl) {
+                imageUrl = result.data.imageUrl;
+              }
+            } catch (e) {
+              console.log('n8n webhook response was not JSON:', webhookResponseText);
+              // If n8n just returns a success message, we keep the default simulated values
+            }
+          } else {
+            console.error('n8n webhook failed with status:', response.status, response.statusText);
+            webhookError = `HTTP ${response.status} ${response.statusText} - ${webhookResponseText.substring(0, 100)}`;
+          }
+        } catch (err: any) {
+          console.error('Error calling n8n webhook:', err);
+          webhookStatus = 'error';
+          webhookError = err.message || String(err);
+        }
+      } else {
+        console.log('No N8N_WEBHOOK_URL configured. Simulating response.');
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      }
       
-      // Simulate response
       res.json({
         id: `d${Date.now()}`,
         prompt: payload.prompt,
-        caption: `Legenda gerada para: ${payload.prompt}\n\n#Automação #IA #MultiPost`,
-        imageUrl: 'https://picsum.photos/seed/generated/800/1000',
+        caption,
+        imageUrl,
         status: 'pending_approval',
         createdAt: new Date().toISOString(),
         tone: payload.tone,
-        hashtags: payload.hashtags
+        hashtags: payload.hashtags,
+        _debug: {
+          webhookUrl,
+          webhookStatus,
+          webhookError,
+          webhookResponseText: webhookResponseText.substring(0, 200)
+        }
       });
     } catch (error) {
       console.error(error);
@@ -46,8 +110,32 @@ async function startServer() {
   app.post("/api/drafts/approve", async (req, res) => {
     try {
       const { draftId, caption } = req.body;
-      console.log('Backend approving draft:', process.env.N8N_WEBHOOK_URL, { draftId, caption });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let webhookUrl = process.env.N8N_WEBHOOK_URL;
+      
+      if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
+        webhookUrl = webhookUrl.replace('/webhook-test/', '/webhook/');
+      }
+      
+      console.log('Backend approving draft:', webhookUrl, { draftId, caption });
+
+      if (webhookUrl) {
+        try {
+          console.log(`Calling n8n webhook for APPROVAL at ${webhookUrl}...`);
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'approve',
+              data: { draftId, caption }
+            })
+          });
+        } catch (err) {
+          console.error('Error calling n8n webhook:', err);
+        }
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       res.json({ success: true });
     } catch (error) {
       console.error(error);
@@ -58,8 +146,32 @@ async function startServer() {
   app.post("/api/drafts/reject", async (req, res) => {
     try {
       const { draftId, feedback } = req.body;
-      console.log('Backend rejecting draft:', process.env.N8N_WEBHOOK_URL, { draftId, feedback });
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let webhookUrl = process.env.N8N_WEBHOOK_URL;
+      
+      if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
+        webhookUrl = webhookUrl.replace('/webhook-test/', '/webhook/');
+      }
+      
+      console.log('Backend rejecting draft:', webhookUrl, { draftId, feedback });
+
+      if (webhookUrl) {
+        try {
+          console.log(`Calling n8n webhook for REJECTION at ${webhookUrl}...`);
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              action: 'reject',
+              data: { draftId, feedback }
+            })
+          });
+        } catch (err) {
+          console.error('Error calling n8n webhook:', err);
+        }
+      } else {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       res.json({ success: true });
     } catch (error) {
       console.error(error);

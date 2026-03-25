@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
 import { LayoutDashboard, Sparkles, CheckSquare, Settings } from 'lucide-react';
+import { Logo } from '../Logo';
 
 export function Navigation() {
   const { currentView, setCurrentView } = useApp();
@@ -19,12 +20,12 @@ export function Navigation() {
       {/* Top Header */}
       <header className="fixed top-0 left-0 right-0 z-50 flex justify-between items-center w-full px-6 py-4 bg-surface-container-low/80 backdrop-blur-md border-b border-outline-variant/10">
         <div className="flex items-center gap-4">
-          <h1 
-            className="font-headline italic font-bold text-2xl text-primary tracking-tight cursor-pointer"
+          <div 
+            className="cursor-pointer"
             onClick={() => setCurrentView('landing')}
           >
-            MultiPost
-          </h1>
+            <Logo className="h-12 w-auto text-primary" />
+          </div>
         </div>
         
         {/* Desktop Nav */}

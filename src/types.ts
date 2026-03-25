@@ -11,6 +11,12 @@ export interface Draft {
   tone?: string;
   hashtags?: boolean;
   feedback?: string;
+  _debug?: {
+    webhookUrl: string;
+    webhookStatus: string;
+    webhookError: string | null;
+    webhookResponseText?: string;
+  };
 }
 
 export interface UserSettings {
