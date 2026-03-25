@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, Edit3, Clock, Hash, History, Loader2 } from 'luc
 import { motion } from 'motion/react';
 
 export function ReviewView() {
-  const { drafts, activeDraftId, setCurrentView, setDrafts, settings } = useApp();
+  const { drafts, activeDraftId, setCurrentView, setDrafts } = useApp();
   const draft = drafts.find(d => d.id === activeDraftId) || drafts[0];
   
   const [isProcessing, setIsProcessing] = useState(false);
@@ -41,7 +41,7 @@ export function ReviewView() {
   const handleApprove = async () => {
     setIsProcessing(true);
     try {
-      await api.approveDraft(settings, draft.id, editedCaption);
+      await api.approveDraft(draft.id, editedCaption);
       setDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, status: 'approved', caption: editedCaption } : d));
       alert('Post aprovado e enviado para publicação!');
       setCurrentView('dashboard');
@@ -66,7 +66,7 @@ export function ReviewView() {
 
     setIsProcessing(true);
     try {
-      await api.rejectDraft(settings, draft.id, feedback);
+      await api.rejectDraft(draft.id, feedback);
       setDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, status: 'rejected', feedback } : d));
       alert('Feedback enviado. Um novo rascunho será gerado em breve.');
       setCurrentView('dashboard');

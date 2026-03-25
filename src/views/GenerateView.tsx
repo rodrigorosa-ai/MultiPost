@@ -5,7 +5,7 @@ import { Sparkles, Loader2 } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export function GenerateView() {
-  const { settings, setDrafts, setCurrentView, setActiveDraftId } = useApp();
+  const { setDrafts, setCurrentView, setActiveDraftId } = useApp();
   const [isGenerating, setIsGenerating] = useState(false);
   const [formData, setFormData] = useState({
     prompt: '',
@@ -19,7 +19,7 @@ export function GenerateView() {
 
     setIsGenerating(true);
     try {
-      const newDraft = await api.generateDraft(settings, formData);
+      const newDraft = await api.generateDraft(formData);
       setDrafts(prev => [newDraft, ...prev]);
       setActiveDraftId(newDraft.id);
       setCurrentView('review');

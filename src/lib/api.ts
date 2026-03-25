@@ -38,33 +38,33 @@ export const DEFAULT_SETTINGS: UserSettings = {
 
 // Simulated API calls to n8n webhook
 export const api = {
-  async generateDraft(settings: UserSettings, payload: any): Promise<Draft> {
-    console.log('Calling webhook to generate draft:', settings.webhookUrl, payload);
-    // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Simulate response
-    return {
-      id: `d${Date.now()}`,
-      prompt: payload.prompt,
-      caption: `Legenda gerada para: ${payload.prompt}\n\n#Automação #IA #MultiPost`,
-      imageUrl: 'https://picsum.photos/seed/generated/800/1000', // Placeholder from mockups
-      status: 'pending_approval',
-      createdAt: new Date().toISOString(),
-      tone: payload.tone,
-      hashtags: payload.hashtags
-    };
+  async generateDraft(payload: any): Promise<Draft> {
+    const response = await fetch('/api/drafts/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) throw new Error('Failed to generate draft');
+    return response.json();
   },
 
-  async approveDraft(settings: UserSettings, draftId: string, caption: string): Promise<boolean> {
-    console.log('Calling webhook to approve draft:', settings.webhookUrl, { draftId, caption });
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  async approveDraft(draftId: string, caption: string): Promise<boolean> {
+    const response = await fetch('/api/drafts/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draftId, caption })
+    });
+    if (!response.ok) throw new Error('Failed to approve draft');
     return true;
   },
 
-  async rejectDraft(settings: UserSettings, draftId: string, feedback: string): Promise<boolean> {
-    console.log('Calling webhook to reject draft:', settings.webhookUrl, { draftId, feedback });
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  async rejectDraft(draftId: string, feedback: string): Promise<boolean> {
+    const response = await fetch('/api/drafts/reject', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ draftId, feedback })
+    });
+    if (!response.ok) throw new Error('Failed to reject draft');
     return true;
   }
 };
