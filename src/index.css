@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-fixed: #a192ff;
+  --color-primary: #afa2ff;
+  --color-primary-dim: #7459f7;
+  --color-on-primary: #2c0097;
+  --color-on-primary-fixed: #000000;
+  
+  --color-secondary: #00cffc;
+  --color-secondary-dim: #00c0ea;
+  --color-on-secondary: #004050;
+  
+  --color-tertiary: #ff59e3;
+  --color-tertiary-dim: #ff59e3;
+  --color-on-tertiary: #42003a;
+  
+  --color-error: #ff6e84;
+  --color-on-error: #490013;
+  --color-error-container: #a70138;
+  --color-on-error-container: #ffb2b9;
+  
+  --color-surface: #0e0d19;
+  --color-surface-dim: #0e0d19;
+  --color-surface-bright: #2c2a3e;
+  
+  --color-surface-container-lowest: #000000;
+  --color-surface-container-low: #131220;
+  --color-surface-container: #191828;
+  --color-surface-container-high: #1f1e2f;
+  --color-surface-container-highest: #262436;
+  
+  --color-on-surface: #ede8fc;
+  --color-on-surface-variant: #ada9bb;
+  
+  --color-outline: #767384;
+  --color-outline-variant: #484655;
+
+  --font-headline: "Noto Serif", serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-surface-container-high/40 backdrop-blur-xl border border-outline-variant/15;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+  }
+}
