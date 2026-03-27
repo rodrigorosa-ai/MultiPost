@@ -11,6 +11,12 @@ export interface Draft {
   tone?: string;
   hashtags?: boolean;
   feedback?: string;
+  history?: {
+    caption: string;
+    imageUrl: string;
+    feedback: string;
+    rejectedAt: string;
+  }[];
   _debug?: {
     webhookUrl: string;
     webhookStatus: string;

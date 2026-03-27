@@ -154,7 +154,7 @@ async function startServer() {
 
   app.post("/api/drafts/reject", async (req, res) => {
     try {
-      const { draftId, feedback, caption } = req.body;
+      const { draftId, feedback, caption: oldCaption } = req.body;
       let webhookUrl = process.env.N8N_WEBHOOK_URL;
       
       if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
@@ -163,25 +163,81 @@ async function startServer() {
       
       console.log('Backend rejecting draft:', webhookUrl, { draftId, feedback });
 
+      let newCaption = oldCaption;
+      let newImageUrl = '';
+      let webhookStatus = 'not_called';
+      let webhookError = null;
+      let webhookResponseText = '';
+
       if (webhookUrl) {
         try {
           console.log(`Calling n8n webhook for REJECTION at ${webhookUrl}...`);
-          await fetch(webhookUrl, {
+          const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'reject',
-              data: { draftId, feedback, caption }
+              data: { draftId, feedback, caption: oldCaption }
             })
           });
-        } catch (err) {
+          
+          webhookStatus = response.status.toString();
+          webhookResponseText = await response.text();
+          
+          if (response.ok) {
+            try {
+              const result = JSON.parse(webhookResponseText);
+              console.log('n8n webhook response (reject):', result);
+              
+              let responseData = result;
+              if (Array.isArray(result) && result.length > 0) {
+                responseData = result[0];
+              }
+
+              if (responseData.post_legenda) {
+                newCaption = responseData.post_legenda;
+              } else if (responseData.caption) {
+                newCaption = responseData.caption;
+              } else if (responseData.data && responseData.data.caption) {
+                newCaption = responseData.data.caption;
+              }
+              
+              if (responseData.post_imagem_url) {
+                newImageUrl = responseData.post_imagem_url;
+              } else if (responseData.imageUrl) {
+                newImageUrl = responseData.imageUrl;
+              } else if (responseData.data && responseData.data.imageUrl) {
+                newImageUrl = responseData.data.imageUrl;
+              }
+            } catch (e) {
+              console.log('n8n webhook response was not JSON:', webhookResponseText);
+            }
+          } else {
+            console.error('n8n webhook failed with status:', response.status, response.statusText);
+            webhookError = `HTTP ${response.status} ${response.statusText} - ${webhookResponseText.substring(0, 100)}`;
+          }
+        } catch (err: any) {
           console.error('Error calling n8n webhook:', err);
+          webhookStatus = 'error';
+          webhookError = err.message || String(err);
         }
       } else {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        newCaption = `[REVISADO] ${oldCaption}\n\nFeedback aplicado: ${feedback}`;
+        newImageUrl = 'https://picsum.photos/seed/revised/800/1000';
       }
       
-      res.json({ success: true });
+      res.json({ 
+        success: true,
+        caption: newCaption,
+        imageUrl: newImageUrl,
+        _debug: {
+          webhookUrl,
+          webhookStatus,
+          webhookError,
+          webhookResponseText: webhookResponseText.substring(0, 200)
+        }
+      });
     } catch (error) {
       console.error(error);
       res.status(500).json({ error: 'Failed to reject draft' });

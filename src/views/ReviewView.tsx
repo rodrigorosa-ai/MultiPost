@@ -66,10 +66,33 @@ export function ReviewView() {
 
     setIsProcessing(true);
     try {
-      await api.rejectDraft(draft.id, feedback, editedCaption);
-      setDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, status: 'rejected', feedback } : d));
-      alert('Feedback enviado. Um novo rascunho será gerado em breve.');
-      setCurrentView('dashboard');
+      const response = await api.rejectDraft(draft.id, feedback, editedCaption);
+      
+      setDrafts(prev => prev.map(d => {
+        if (d.id === draft.id) {
+          const historyEntry = {
+            caption: editedCaption,
+            imageUrl: d.imageUrl,
+            feedback: feedback,
+            rejectedAt: new Date().toISOString()
+          };
+          
+          return { 
+            ...d, 
+            status: 'pending_approval', // Keep it pending for the new review
+            caption: response.caption || d.caption,
+            imageUrl: response.imageUrl || d.imageUrl,
+            feedback: '', // Clear feedback for the new version
+            history: [...(d.history || []), historyEntry],
+            _debug: response._debug || d._debug
+          };
+        }
+        return d;
+      }));
+      
+      alert('Novo rascunho gerado com base no seu feedback!');
+      setShowRejectInput(false);
+      setFeedback('');
     } catch (error) {
       console.error(error);
       alert('Erro ao rejeitar post.');
@@ -215,8 +238,52 @@ export function ReviewView() {
           <History className="text-tertiary" size={32} />
           <h3 className="font-bold text-lg">Histórico</h3>
           <p className="text-on-surface-variant text-sm">Gerado via Prompt: "{draft.prompt.substring(0, 20)}..."</p>
+          {draft.history && draft.history.length > 0 && (
+            <p className="text-tertiary text-sm font-bold mt-2">
+              {draft.history.length} versão(ões) anterior(es) rejeitada(s)
+            </p>
+          )}
         </div>
       </section>
+
+      {/* History Panel */}
+      {draft.history && draft.history.length > 0 && (
+        <section className="mt-8 space-y-6">
+          <h3 className="font-bold text-xl flex items-center gap-2 text-on-surface">
+            <History size={24} className="text-tertiary" />
+            Histórico de Versões Rejeitadas
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {draft.history.map((h, index) => (
+              <div key={index} className="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold uppercase tracking-wider text-tertiary">Versão {index + 1}</span>
+                  <span className="text-xs text-on-surface-variant">{new Date(h.rejectedAt).toLocaleString()}</span>
+                </div>
+                
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-error uppercase">Motivo da Rejeição:</span>
+                  <p className="text-sm text-on-surface bg-error/10 p-3 rounded-lg border border-error/20">{h.feedback}</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <span className="text-xs font-bold text-on-surface-variant uppercase">Legenda Anterior:</span>
+                  <p className="text-sm text-on-surface-variant bg-surface-container-lowest p-3 rounded-lg line-clamp-3">{h.caption}</p>
+                </div>
+                
+                {h.imageUrl && (
+                  <div className="aspect-video bg-surface-container-lowest rounded-lg overflow-hidden relative">
+                    <img src={h.imageUrl} alt={`Versão ${index + 1}`} className="w-full h-full object-cover opacity-50 grayscale" referrerPolicy="no-referrer" />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="bg-surface-container-highest/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-on-surface">Imagem Antiga</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Debug Info Panel */}
       {draft._debug && (
