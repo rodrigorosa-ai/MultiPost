@@ -66,7 +66,7 @@ export function ReviewView() {
 
     setIsProcessing(true);
     try {
-      await api.rejectDraft(draft.id, feedback);
+      await api.rejectDraft(draft.id, feedback, editedCaption);
       setDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, status: 'rejected', feedback } : d));
       alert('Feedback enviado. Um novo rascunho será gerado em breve.');
       setCurrentView('dashboard');

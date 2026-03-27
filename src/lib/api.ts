@@ -58,11 +58,11 @@ export const api = {
     return true;
   },
 
-  async rejectDraft(draftId: string, feedback: string): Promise<boolean> {
+  async rejectDraft(draftId: string, feedback: string, caption: string): Promise<boolean> {
     const response = await fetch('/api/drafts/reject', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ draftId, feedback })
+      body: JSON.stringify({ draftId, feedback, caption })
     });
     if (!response.ok) throw new Error('Failed to reject draft');
     return true;

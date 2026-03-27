@@ -55,16 +55,25 @@ async function startServer() {
               console.log('n8n webhook response:', result);
               
               // Handle n8n's default response format or custom format
-              if (result.caption) {
-                caption = result.caption;
-              } else if (result.data && result.data.caption) {
-                caption = result.data.caption;
+              let responseData = result;
+              if (Array.isArray(result) && result.length > 0) {
+                responseData = result[0];
+              }
+
+              if (responseData.post_legenda) {
+                caption = responseData.post_legenda;
+              } else if (responseData.caption) {
+                caption = responseData.caption;
+              } else if (responseData.data && responseData.data.caption) {
+                caption = responseData.data.caption;
               }
               
-              if (result.imageUrl) {
-                imageUrl = result.imageUrl;
-              } else if (result.data && result.data.imageUrl) {
-                imageUrl = result.data.imageUrl;
+              if (responseData.post_imagem_url) {
+                imageUrl = responseData.post_imagem_url;
+              } else if (responseData.imageUrl) {
+                imageUrl = responseData.imageUrl;
+              } else if (responseData.data && responseData.data.imageUrl) {
+                imageUrl = responseData.data.imageUrl;
               }
             } catch (e) {
               console.log('n8n webhook response was not JSON:', webhookResponseText);
@@ -145,7 +154,7 @@ async function startServer() {
 
   app.post("/api/drafts/reject", async (req, res) => {
     try {
-      const { draftId, feedback } = req.body;
+      const { draftId, feedback, caption } = req.body;
       let webhookUrl = process.env.N8N_WEBHOOK_URL;
       
       if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
@@ -162,7 +171,7 @@ async function startServer() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'reject',
-              data: { draftId, feedback }
+              data: { draftId, feedback, caption }
             })
           });
         } catch (err) {
