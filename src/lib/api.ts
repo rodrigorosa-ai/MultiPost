@@ -48,11 +48,11 @@ export const api = {
     return response.json();
   },
 
-  async approveDraft(draftId: string, caption: string): Promise<boolean> {
+  async approveDraft(draftId: string, caption: string, imageUrl: string): Promise<boolean> {
     const response = await fetch('/api/drafts/approve', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ draftId, caption })
+      body: JSON.stringify({ draftId, caption, imageUrl })
     });
     if (!response.ok) throw new Error('Failed to approve draft');
     return true;

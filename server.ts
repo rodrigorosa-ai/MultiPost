@@ -118,14 +118,23 @@ async function startServer() {
 
   app.post("/api/drafts/approve", async (req, res) => {
     try {
-      const { draftId, caption } = req.body;
+      const { draftId, caption, imageUrl } = req.body;
       let webhookUrl = process.env.N8N_WEBHOOK_URL;
       
       if (webhookUrl && webhookUrl.includes('/webhook-test/')) {
         webhookUrl = webhookUrl.replace('/webhook-test/', '/webhook/');
       }
       
-      console.log('Backend approving draft:', webhookUrl, { draftId, caption });
+      // Extract Google Drive ID if present
+      let imageId = null;
+      if (imageUrl) {
+        const match = imageUrl.match(/[?&]id=([^&]+)/);
+        if (match && match[1]) {
+          imageId = match[1];
+        }
+      }
+      
+      console.log('Backend approving draft:', webhookUrl, { draftId, caption, imageId });
 
       if (webhookUrl) {
         try {
@@ -135,7 +144,7 @@ async function startServer() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               action: 'approve',
-              data: { draftId, caption }
+              data: { draftId, caption, imageUrl, imageId }
             })
           });
         } catch (err) {

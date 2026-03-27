@@ -41,7 +41,7 @@ export function ReviewView() {
   const handleApprove = async () => {
     setIsProcessing(true);
     try {
-      await api.approveDraft(draft.id, editedCaption);
+      await api.approveDraft(draft.id, editedCaption, draft.imageUrl);
       setDrafts(prev => prev.map(d => d.id === draft.id ? { ...d, status: 'approved', caption: editedCaption } : d));
       alert('Post aprovado e enviado para publicação!');
       setCurrentView('dashboard');
